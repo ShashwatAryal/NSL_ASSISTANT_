@@ -28,15 +28,13 @@ N_FRAMES = 32
 
 # Approved list of recognizable signs (lowercase English, no underscores)
 SIGNS = [
-    "pain",
+    "headache",
+    "stomachache",
     "fever",
-    "head",
-    "stomach",
-    "yes",
-    "no",
     "cough",
     "vomiting",
-    "chest",
+    "yes",
+    "no",
     "day",
     "two",
     "five",
@@ -46,19 +44,17 @@ SIGNS = [
 # Mapping of English sign labels to their Nepali translations
 # Note: The user should review and verify these Nepali translations.
 SIGN_NE = {
-    "pain": "दुखाइ",
-    "fever": "ज्वरो",
-    "head": "टाउको",
-    "stomach": "पेट",
-    "yes": "हो",
-    "no": "होइन",
-    "cough": "खोकी",
-    "vomiting": "बान्ता",
-    "chest": "छाती",
-    "day": "दिन",
-    "two": "दुई",
-    "five": "पाँच",
-    "rest": "",
+    "headache":    "टाउको दुखाइ",
+    "stomachache": "पेट दुखाइ",
+    "fever":       "ज्वरो",
+    "cough":       "खोकी",
+    "vomiting":    "बान्ता",
+    "yes":         "हो",
+    "no":          "होइन",
+    "day":         "दिन",
+    "two":         "दुई",
+    "five":        "पाँच",
+    "rest":        "",
 }
 
 # MediaPipe Pose landmark indices to retain:
