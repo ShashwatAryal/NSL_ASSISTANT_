@@ -4,9 +4,9 @@ __pycache__/
 *.pyc
 data/
 videos/
+prompts/
 *.mp4
 *.mov
 *.avi
 models/*.task
 models/*.pkl
-
