@@ -45,7 +45,6 @@ def find_video_files(input_dir: Path) -> list[Path]:
 def process_single_video(
     video_path: Path,
     output_dir: Path,
-    extractor: LandmarkExtractor,
     overwrite: bool,
 ) -> str:
     """Process a single video file, extract landmarks, and save .npz and metadata.
@@ -75,9 +74,16 @@ def process_single_video(
 
     # 3. Extract landmarks from video
     try:
-        clip: dict[str, Any] = extract_from_video(video_path, extractor=extractor)
+        with LandmarkExtractor() as extractor:
+            clip: dict[str, Any] = extract_from_video(
+                video_path,
+                extractor=extractor,
+            )
     except Exception as err:
-        print(f"[ERROR] {video_path.name}: Failed to extract landmarks ({err}).")
+        print(
+            f"[ERROR] {video_path.name}: "
+            f"Failed to extract landmarks ({err})."
+        )
         return "failed"
 
     # 4. Save .npz clip
@@ -150,20 +156,19 @@ def main() -> None:
     skipped_count = 0
     failed_count = 0
 
-    with LandmarkExtractor() as extractor:
-        for video_path in videos:
-            status = process_single_video(
-                video_path=video_path,
-                output_dir=output_dir,
-                extractor=extractor,
-                overwrite=args.overwrite,
-            )
-            if status == "processed":
-                processed_count += 1
-            elif status == "skipped":
-                skipped_count += 1
-            else:
-                failed_count += 1
+    for video_path in videos:
+        status = process_single_video(
+            video_path=video_path,
+            output_dir=output_dir,
+            overwrite=args.overwrite,
+        )
+
+        if status == "processed":
+            processed_count += 1
+        elif status == "skipped":
+            skipped_count += 1
+        else:
+            failed_count += 1
 
     print(
         f"\nExtraction summary: {processed_count} processed, "
