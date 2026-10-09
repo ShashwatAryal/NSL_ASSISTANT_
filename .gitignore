@@ -1,0 +1,12 @@
+.venv/
+.env
+__pycache__/
+*.pyc
+data/
+videos/
+*.mp4
+*.mov
+*.avi
+models/*.task
+models/*.pkl
+
