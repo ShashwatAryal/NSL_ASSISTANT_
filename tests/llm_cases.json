@@ -1,0 +1,330 @@
+[
+  {
+    "name": "fever_2d_no_no",
+    "answers": {
+      "complaint": "fever",
+      "duration_number": "two",
+      "duration_unit": "day",
+      "allergy": "no",
+      "medicine_taken": "no"
+    },
+    "expected": {
+      "complaint": "fever",
+      "duration_days": 2,
+      "allergy": false,
+      "medicine_taken": false
+    }
+  },
+  {
+    "name": "fever_5d_yes_yes",
+    "answers": {
+      "complaint": "fever",
+      "duration_number": "five",
+      "duration_unit": "day",
+      "allergy": "yes",
+      "medicine_taken": "yes"
+    },
+    "expected": {
+      "complaint": "fever",
+      "duration_days": 5,
+      "allergy": true,
+      "medicine_taken": true
+    }
+  },
+  {
+    "name": "fever_2d_yes_no",
+    "answers": {
+      "complaint": "fever",
+      "duration_number": "two",
+      "duration_unit": "day",
+      "allergy": "yes",
+      "medicine_taken": "no"
+    },
+    "expected": {
+      "complaint": "fever",
+      "duration_days": 2,
+      "allergy": true,
+      "medicine_taken": false
+    }
+  },
+  {
+    "name": "fever_5d_no_yes",
+    "answers": {
+      "complaint": "fever",
+      "duration_number": "five",
+      "duration_unit": "day",
+      "allergy": "no",
+      "medicine_taken": "yes"
+    },
+    "expected": {
+      "complaint": "fever",
+      "duration_days": 5,
+      "allergy": false,
+      "medicine_taken": true
+    }
+  },
+  {
+    "name": "headache_2d_no_yes",
+    "answers": {
+      "complaint": "headache",
+      "duration_number": "two",
+      "duration_unit": "day",
+      "allergy": "no",
+      "medicine_taken": "yes"
+    },
+    "expected": {
+      "complaint": "headache",
+      "duration_days": 2,
+      "allergy": false,
+      "medicine_taken": true
+    }
+  },
+  {
+    "name": "headache_5d_yes_no",
+    "answers": {
+      "complaint": "headache",
+      "duration_number": "five",
+      "duration_unit": "day",
+      "allergy": "yes",
+      "medicine_taken": "no"
+    },
+    "expected": {
+      "complaint": "headache",
+      "duration_days": 5,
+      "allergy": true,
+      "medicine_taken": false
+    }
+  },
+  {
+    "name": "headache_2d_yes_yes",
+    "answers": {
+      "complaint": "headache",
+      "duration_number": "two",
+      "duration_unit": "day",
+      "allergy": "yes",
+      "medicine_taken": "yes"
+    },
+    "expected": {
+      "complaint": "headache",
+      "duration_days": 2,
+      "allergy": true,
+      "medicine_taken": true
+    }
+  },
+  {
+    "name": "headache_5d_no_no",
+    "answers": {
+      "complaint": "headache",
+      "duration_number": "five",
+      "duration_unit": "day",
+      "allergy": "no",
+      "medicine_taken": "no"
+    },
+    "expected": {
+      "complaint": "headache",
+      "duration_days": 5,
+      "allergy": false,
+      "medicine_taken": false
+    }
+  },
+  {
+    "name": "stomachache_2d_yes_yes",
+    "answers": {
+      "complaint": "stomachache",
+      "duration_number": "two",
+      "duration_unit": "day",
+      "allergy": "yes",
+      "medicine_taken": "yes"
+    },
+    "expected": {
+      "complaint": "stomachache",
+      "duration_days": 2,
+      "allergy": true,
+      "medicine_taken": true
+    }
+  },
+  {
+    "name": "stomachache_5d_no_no",
+    "answers": {
+      "complaint": "stomachache",
+      "duration_number": "five",
+      "duration_unit": "day",
+      "allergy": "no",
+      "medicine_taken": "no"
+    },
+    "expected": {
+      "complaint": "stomachache",
+      "duration_days": 5,
+      "allergy": false,
+      "medicine_taken": false
+    }
+  },
+  {
+    "name": "stomachache_2d_no_yes",
+    "answers": {
+      "complaint": "stomachache",
+      "duration_number": "two",
+      "duration_unit": "day",
+      "allergy": "no",
+      "medicine_taken": "yes"
+    },
+    "expected": {
+      "complaint": "stomachache",
+      "duration_days": 2,
+      "allergy": false,
+      "medicine_taken": true
+    }
+  },
+  {
+    "name": "stomachache_5d_yes_no",
+    "answers": {
+      "complaint": "stomachache",
+      "duration_number": "five",
+      "duration_unit": "day",
+      "allergy": "yes",
+      "medicine_taken": "no"
+    },
+    "expected": {
+      "complaint": "stomachache",
+      "duration_days": 5,
+      "allergy": true,
+      "medicine_taken": false
+    }
+  },
+  {
+    "name": "cough_2d_no_no",
+    "answers": {
+      "complaint": "cough",
+      "duration_number": "two",
+      "duration_unit": "day",
+      "allergy": "no",
+      "medicine_taken": "no"
+    },
+    "expected": {
+      "complaint": "cough",
+      "duration_days": 2,
+      "allergy": false,
+      "medicine_taken": false
+    }
+  },
+  {
+    "name": "cough_5d_yes_no",
+    "answers": {
+      "complaint": "cough",
+      "duration_number": "five",
+      "duration_unit": "day",
+      "allergy": "yes",
+      "medicine_taken": "no"
+    },
+    "expected": {
+      "complaint": "cough",
+      "duration_days": 5,
+      "allergy": true,
+      "medicine_taken": false
+    }
+  },
+  {
+    "name": "cough_2d_yes_yes",
+    "answers": {
+      "complaint": "cough",
+      "duration_number": "two",
+      "duration_unit": "day",
+      "allergy": "yes",
+      "medicine_taken": "yes"
+    },
+    "expected": {
+      "complaint": "cough",
+      "duration_days": 2,
+      "allergy": true,
+      "medicine_taken": true
+    }
+  },
+  {
+    "name": "vomiting_2d_no_yes",
+    "answers": {
+      "complaint": "vomiting",
+      "duration_number": "two",
+      "duration_unit": "day",
+      "allergy": "no",
+      "medicine_taken": "yes"
+    },
+    "expected": {
+      "complaint": "vomiting",
+      "duration_days": 2,
+      "allergy": false,
+      "medicine_taken": true
+    }
+  },
+  {
+    "name": "vomiting_5d_yes_yes",
+    "answers": {
+      "complaint": "vomiting",
+      "duration_number": "five",
+      "duration_unit": "day",
+      "allergy": "yes",
+      "medicine_taken": "yes"
+    },
+    "expected": {
+      "complaint": "vomiting",
+      "duration_days": 5,
+      "allergy": true,
+      "medicine_taken": true
+    }
+  },
+  {
+    "name": "vomiting_5d_no_no",
+    "answers": {
+      "complaint": "vomiting",
+      "duration_number": "five",
+      "duration_unit": "day",
+      "allergy": "no",
+      "medicine_taken": "no"
+    },
+    "expected": {
+      "complaint": "vomiting",
+      "duration_days": 5,
+      "allergy": false,
+      "medicine_taken": false
+    }
+  },
+  {
+    "name": "incomplete_complaint_only_fever",
+    "answers": {
+      "complaint": "fever"
+    },
+    "expected": {
+      "complaint": "fever",
+      "duration_days": null,
+      "allergy": null,
+      "medicine_taken": null
+    }
+  },
+  {
+    "name": "incomplete_complaint_and_duration_stomachache",
+    "answers": {
+      "complaint": "stomachache",
+      "duration_number": "five",
+      "duration_unit": "day"
+    },
+    "expected": {
+      "complaint": "stomachache",
+      "duration_days": 5,
+      "allergy": null,
+      "medicine_taken": null
+    }
+  },
+  {
+    "name": "incomplete_complaint_and_allergy_cough",
+    "answers": {
+      "complaint": "cough",
+      "allergy": "no"
+    },
+    "expected": {
+      "complaint": "cough",
+      "duration_days": null,
+      "allergy": false,
+      "medicine_taken": null
+    }
+  }
+]
+

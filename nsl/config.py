@@ -132,3 +132,11 @@ RESULTS_DIR = PROJECT_ROOT / "docs" / "results"
 HAND_MODEL_PATH = MODELS_DIR / "hand_landmarker.task"
 POSE_MODEL_PATH = MODELS_DIR / "pose_landmarker_lite.task"
 
+# Feature extraction settings
+# The z coordinate is noisy from monocular webcam estimation, so it is dropped by default
+USE_Z = False
+
+# MediaPipe hand landmark indices for the five fingertips (wrist is index 0)
+# 4: thumb tip, 8: index fingertip, 12: middle fingertip, 16: ring fingertip, 20: pinky tip
+FINGERTIP_IDX = [4, 8, 12, 16, 20]
+

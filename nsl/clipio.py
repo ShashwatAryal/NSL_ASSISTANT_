@@ -119,7 +119,7 @@ def save_clip(path: str | Path, clip: dict) -> None:
         clip: Dictionary adhering to the clip format specification.
 
     Raises:
-        ValueError: If clip data does not match contract shapes or dtypes.
+        ValueError: If clip data does not match contract shapes or dtypes..
     """
     validate_clip(clip)
     file_path = Path(path)
