@@ -5,7 +5,7 @@ Clips are saved as compressed .npz landmark files (and optionally raw video).
 Metadata rows are written to data/metadata.csv automatically.
 
 Usage:
-    python -m scripts.record_clips --person p1 --signs fever pain
+    python -m scripts.record_clips --person p1 --signs fever headache
     python -m scripts.record_clips --person p2 --session 2 --save-video
 """
 
@@ -128,27 +128,40 @@ def count_clips_for_sign(person: str, sign: str, session: str) -> int:
 
 # ── Overlay drawing ───────────────────────────────────────────────────────────
 
-def draw_idle_overlay(canvas: np.ndarray, frame_rec: dict[str, Any],
-                      sign: str, person: str, session: str,
-                      clip_count: int, msg: str = "") -> None:
-    """Draw the idle/waiting HUD: skeleton, sign info, and instructions.
+def draw_skeleton_overlay(canvas: np.ndarray, frame_rec: dict[str, Any]) -> None:
+    """Draw the live skeleton on an UNFLIPPED frame.
+
+    The landmark coordinates come from the unflipped frame, so the skeleton
+    must be drawn on the unflipped frame. The caller flips the whole picture
+    afterwards for the mirrored preview, which moves the skeleton and the video
+    together so they always stay aligned.
 
     Args:
-        canvas: BGR image to draw on (already mirrored for preview).
+        canvas: Unflipped BGR image to draw on.
         frame_rec: Latest landmark frame record dict.
-        sign: Current sign label.
-        person: Signer identifier.
-        session: Session identifier.
-        clip_count: Clips already recorded for this sign/session.
-        msg: Optional extra message line to display.
     """
-    # Draw live skeleton on mirrored preview
     if frame_rec["pose_present"]:
         draw_pose_skeleton(canvas, frame_rec["pose"], COLOR_POSE)
     for slot, color in enumerate([COLOR_LEFT_HAND, COLOR_RIGHT_HAND]):
         if frame_rec["hand_present"][slot]:
             draw_hand_skeleton(canvas, frame_rec["hands"][slot], color)
 
+
+def draw_idle_hud(canvas: np.ndarray, sign: str, person: str, session: str,
+                  clip_count: int, msg: str = "") -> None:
+    """Draw the idle/waiting text HUD: sign info and instructions.
+
+    This is drawn AFTER the picture has been flipped, so the text reads
+    normally and is not mirrored.
+
+    Args:
+        canvas: BGR image to draw on (already mirrored for preview).
+        sign: Current sign label.
+        person: Signer identifier.
+        session: Session identifier.
+        clip_count: Clips already recorded for this sign/session.
+        msg: Optional extra message line to display.
+    """
     nepali = SIGN_NE.get(sign, "")
     y = 28
     y = draw_text(canvas, f"Sign: {sign}  ({nepali})", y, COLOR_YELLOW, 0.7, 2)
@@ -157,6 +170,30 @@ def draw_idle_overlay(canvas: np.ndarray, frame_rec: dict[str, Any],
                   (180, 180, 180), 0.5)
     if msg:
         draw_text(canvas, msg, y, COLOR_RED, 0.65, 2)
+
+
+def make_idle_preview(frame: np.ndarray, frame_rec: dict[str, Any], sign: str,
+                      person: str, session: str, clip_count: int,
+                      msg: str = "") -> np.ndarray:
+    """Build the mirrored idle preview: skeleton first, then flip, then text.
+
+    Args:
+        frame: Unflipped BGR camera frame.
+        frame_rec: Landmark record computed from that same unflipped frame.
+        sign: Current sign label.
+        person: Signer identifier.
+        session: Session identifier.
+        clip_count: Clips already recorded for this sign/session.
+        msg: Optional extra message line.
+
+    Returns:
+        Mirrored BGR image ready to show.
+    """
+    annotated = frame.copy()                     # keep the original frame untouched
+    draw_skeleton_overlay(annotated, frame_rec)  # 1) skeleton on unflipped picture
+    preview = cv2.flip(annotated, 1)             # 2) flip video and skeleton together
+    draw_idle_hud(preview, sign, person, session, clip_count, msg)  # 3) text last
+    return preview
 
 
 def draw_countdown_overlay(canvas: np.ndarray, countdown_val: int) -> None:
@@ -406,6 +443,7 @@ def run(args: argparse.Namespace) -> None:
 
     # Idle status message (e.g. quality warnings)
     idle_msg: str = ""
+    last_timestamp_ms = -1
 
     try:
         with LandmarkExtractor() as extractor:
@@ -420,13 +458,17 @@ def run(args: argparse.Namespace) -> None:
                     break
 
                 # Run landmarks on unflipped frame at increasing timestamp
-                ts_ms = int(time.time() * 1000) % (2 ** 31)
+                ts_ms = max(
+                    int(time.monotonic() * 1000),
+                    last_timestamp_ms + 1,
+                )
+                last_timestamp_ms = ts_ms
                 frame_rec = extractor.process_frame(frame, ts_ms)
 
-                # Mirror for display only
-                preview = cv2.flip(frame, 1)
-                draw_idle_overlay(preview, frame_rec, sign, args.person,
-                                  session, clip_count, idle_msg)
+                # Mirrored preview: skeleton drawn on the unflipped frame,
+                # then the picture is flipped, then the text is added.
+                preview = make_idle_preview(frame, frame_rec, sign, args.person,
+                                            session, clip_count, idle_msg)
                 cv2.imshow("NSL Recorder", preview)
 
                 key = cv2.waitKey(1) & 0xFF
@@ -471,7 +513,6 @@ def run(args: argparse.Namespace) -> None:
                     raw_frames: list[np.ndarray] = []
                     frame_records: list[dict] = []
                     t_start = time.time()
-                    t_last_ms2 = -1
 
                     while True:
                         elapsed = time.time() - t_start
@@ -482,9 +523,11 @@ def run(args: argparse.Namespace) -> None:
                             continue
                         if args.save_video:
                             raw_frames.append(fr3.copy())
-                        calc_ms = int(round(elapsed * 1000))
-                        ts3 = max(calc_ms, t_last_ms2 + 1)
-                        t_last_ms2 = ts3
+                        ts3 = max(
+                            int(time.monotonic() * 1000),
+                            last_timestamp_ms + 1,
+                        )
+                        last_timestamp_ms = ts3
                         rec = extractor.process_frame(fr3, ts3)
                         frame_records.append(rec)
                         preview3 = cv2.flip(fr3, 1)
