@@ -178,5 +178,6 @@ class Summariser:
             "sentence_ne": str(sentence),
             "fields": fields,
             "used_model": used_model,
+            "model_name": str(out.get("model_name", "")) if isinstance(out, dict) else "",
             "reason": str(reason or ""),
         }

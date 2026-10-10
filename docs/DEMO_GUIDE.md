@@ -1,17 +1,18 @@
-# Sanket Saathi: demo guide
+# SignScribe: demo guide
 
 ## 1. Install (once)
 
-1. Unzip `NSL_demo_app.zip` into your project root. You should now have `app/`, `scripts/run_demo.py`,
+1. Unzip `SignScribe_demo.zip` into your project root. You should now have `app/`, `scripts/run_demo.py`,
    `scripts/check_app.py` and `docs/DEMO_GUIDE.md` next to your existing `nsl/` folder.
-2. Nothing new to install: the server uses only Python's standard library.
+2. Install Ollama and download the local model once: `ollama pull gemma4:e2b`.
+   SignScribe calls Ollama at `http://localhost:11434`; no API key is needed for local inference.
 3. Add `docs/DEMO_GUIDE.md` to Git if you like. Never commit `.env`, `data/` or `models/*.pkl` with personal data.
 
 ## 2. Before every demo
 
 ```
 python -m scripts.check_app
-python -m scripts.check_app --llm            (optional: one real Gemma call)
+python -m scripts.check_app --llm            (optional: one real local Gemma call)
 python -m scripts.check_app --camera-test    (optional: grabs one camera frame)
 ```
 
@@ -24,7 +25,7 @@ modules is `app/engine.py`, so that is the only place you may need to adjust a n
 |---|---|
 | `python -m scripts.run_demo` | The real demo: live webcam + your trained `models/model.pkl` |
 | `python -m scripts.run_demo --lenient` | The model keeps saying "sign again": always show the top candidates |
-| `python -m scripts.run_demo --no-llm` | No internet or no API quota: template sentence instead of Gemma |
+| `python -m scripts.run_demo --no-llm` | Use the fixed offline template instead of local Gemma |
 | `python -m scripts.run_demo --video FILE.mp4` | Backup: replay a recording (the screen says VIDEO INPUT) |
 | `python -m scripts.run_demo --simulate` | Rehearse the screen only. NOT recognition (the screen says SIMULATION) |
 | `--seconds 3.0` | Recording window per sign. Keep it equal to what you used when recording training data |
@@ -40,9 +41,9 @@ distance, hand percentage). Use "Choose by touch" if recognition ever fails: the
 
 1. Introduce the patient: "A Deaf patient arrives without an interpreter."
 2. Question 1: sign one complaint (for example `fever`). Show the three candidates and tap the right one.
-3. Questions 2 and 3: number of days, then `day`.
-4. Questions 4 and 5: allergy and medicine (`yes` / `no`).
-5. Point to the doctor panel: confirmed answers, the Nepali summary, and the badge that says whether Gemma or the template wrote it.
+3. Question 2: choose the duration in days.
+4. Questions 3 and 4: allergy and medicine (`yes` / `no`).
+5. Point to the doctor panel: confirmed answers, the Nepali summary, and the badge showing local Gemma or the offline template.
 6. The doctor taps a reply; it appears in large Nepali text on the patient side.
 7. Do one deliberate "sign again" (stay still for a moment). It shows the safety design: it asks, it does not guess.
 
@@ -70,7 +71,7 @@ distance, hand percentage). Use "Choose by touch" if recognition ever fails: the
 | "I could not see your hands" | Sit closer, improve light, keep hands inside the picture |
 | Camera problem banner | Close other apps; try `--camera 1` |
 | Black or frozen picture | Reload the page; restart the command |
-| Gemma not answering | The screen falls back to a template sentence by itself; `--no-llm` forces it |
+| Gemma not answering | Make sure the Ollama app is running and `ollama list` shows `gemma4:e2b`; the screen falls back to a template sentence |
 | Nepali text looks broken | Use Chrome or Edge on Windows (Nirmala UI font) |
 | Port in use | `--port 8001` |
 

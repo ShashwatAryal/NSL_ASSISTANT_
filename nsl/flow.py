@@ -2,10 +2,9 @@
 
 Defines the structured clinical intake questionnaire:
 1. Primary complaint (headache, stomachache, fever, cough, vomiting)
-2. Duration number (two, five)
-3. Duration unit (day)
-4. Known allergies (yes, no)
-5. Prior medicine taken (yes, no)
+2. Duration in days (two, five)
+3. Known allergies (yes, no)
+4. Prior medicine taken (yes, no)
 """
 
 from typing import Dict, List, Optional
@@ -21,11 +20,6 @@ QUESTIONS: List[Dict] = [
         "id": "duration_number",
         "text_ne": "कति दिनदेखि भएको हो?",
         "allowed_signs": ["two", "five"],
-    },
-    {
-        "id": "duration_unit",
-        "text_ne": "समय एकाइ के हो?",
-        "allowed_signs": ["day"],
     },
     {
         "id": "allergy",
@@ -69,4 +63,3 @@ def is_valid_answer(question_id: str, sign: str) -> bool:
         if q["id"] == question_id:
             return sign in q["allowed_signs"]
     return False
-

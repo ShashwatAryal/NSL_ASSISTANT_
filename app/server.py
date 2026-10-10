@@ -19,7 +19,7 @@ INDEX_PATH = Path(__file__).parent / "static" / "index.html"
 
 
 class Handler(BaseHTTPRequestHandler):
-    server_version = "SanketSaathi/1.0"
+    server_version = "SignScribe/1.0"
 
     def log_message(self, fmt, *args):          # keep the terminal quiet
         pass

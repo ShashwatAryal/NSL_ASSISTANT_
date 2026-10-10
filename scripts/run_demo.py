@@ -3,7 +3,7 @@
 Run from the project root, with (.venv) active:
 
     python -m scripts.run_demo                  live webcam + your trained model
-    python -m scripts.run_demo --no-llm         same, but never call the Gemini API
+    python -m scripts.run_demo --no-llm         use the offline template instead of local Gemma
     python -m scripts.run_demo --lenient        show candidates even when the model is unsure
     python -m scripts.run_demo --video FILE     replay a recorded video instead of the camera
     python -m scripts.run_demo --simulate       rehearse the screen only (NOT real recognition)
@@ -19,7 +19,7 @@ from pathlib import Path
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Sanket Saathi live demo.")
+    parser = argparse.ArgumentParser(description="SignScribe live demo.")
     parser.add_argument("--model", type=Path, default=Path("models/model.pkl"),
                         help="Trained model file (default: models/model.pkl).")
     parser.add_argument("--camera", type=int, default=0, help="Camera index (default 0).")
@@ -28,14 +28,14 @@ def main() -> None:
                         help="No camera, no model: rehearse the screen. NOT real recognition.")
     parser.add_argument("--seconds", type=float, default=3.0,
                         help="Recording length per sign. Keep equal to what you used for training.")
-    parser.add_argument("--no-llm", action="store_true", help="Do not call Gemma; use the template.")
+    parser.add_argument("--no-llm", action="store_true", help="Do not call local Gemma; use the template.")
     parser.add_argument("--lenient", action="store_true",
                         help="Ignore the model's 'unsure' flag and always show candidates.")
     parser.add_argument("--port", type=int, default=8000)
     parser.add_argument("--no-browser", action="store_true")
     args = parser.parse_args()
 
-    try:                                     # load GEMINI_API_KEY / GEMMA_MODEL from .env
+    try:                                     # load Ollama model settings from .env
         from dotenv import load_dotenv
         load_dotenv()
     except ImportError:
@@ -72,7 +72,7 @@ def main() -> None:
     server = DemoServer(("127.0.0.1", args.port), session, camera)
 
     url = f"http://127.0.0.1:{args.port}"
-    print(f"\nSanket Saathi is running at {url}  (mode: {mode})\nPress Ctrl+C to stop.\n")
+    print(f"\nSignScribe is running at {url}  (mode: {mode})\nPress Ctrl+C to stop.\n")
     camera.start()
     if not args.no_browser:
         threading.Timer(1.0, webbrowser.open, [url]).start()

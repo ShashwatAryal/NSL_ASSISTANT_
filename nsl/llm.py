@@ -7,7 +7,8 @@ JSON record for the consulting physician, with strict validation and determinist
 import json
 import os
 import re
-import time
+from urllib.error import HTTPError, URLError
+from urllib.request import Request, urlopen
 from typing import Any, Dict, Optional
 from dotenv import load_dotenv
 
@@ -32,7 +33,7 @@ class ValidationError(Exception):
 
 
 def build_prompt(answers: Dict[str, str]) -> str:
-    """Construct a strict prompt instructing Gemma/Gemini to translate signs to Nepali.
+    """Construct a strict prompt instructing Gemma to translate signs to Nepali.
 
     Args:
         answers: Dictionary of confirmed sign answers.
@@ -66,7 +67,7 @@ STRICT CLINICAL SAFETY RULES:
 
 
 def call_model(prompt: str) -> str:
-    """Call Gemini/Gemma API with temperature=0.0 and automatic transient retry.
+    """Call the local Ollama chat API and return its generated JSON text.
 
     Args:
         prompt: Prompt string sent to the model.
@@ -75,38 +76,56 @@ def call_model(prompt: str) -> str:
         Generated text string.
 
     Raises:
-        RuntimeError: If API key is missing or model call fails.
+        RuntimeError: If Ollama is unavailable or returns an invalid response.
     """
-    api_key = os.getenv("GEMINI_API_KEY")
-    if not api_key:
-        raise RuntimeError("GEMINI_API_KEY environment variable is not configured.")
+    model_name = os.getenv("OLLAMA_MODEL", "gemma4:e2b")
+    host = os.getenv("OLLAMA_HOST", "http://localhost:11434").rstrip("/")
+    schema = {
+        "type": "object",
+        "properties": {
+            "sentence_ne": {"type": "string"},
+            "complaint": {"type": ["string", "null"]},
+            "duration_days": {"type": ["integer", "null"]},
+            "allergy": {"type": ["boolean", "null"]},
+            "medicine_taken": {"type": ["boolean", "null"]},
+        },
+        "required": sorted(ALLOWED_JSON_KEYS),
+        "additionalProperties": False,
+    }
+    body = json.dumps({
+        "model": model_name,
+        "messages": [{"role": "user", "content": prompt}],
+        "stream": False,
+        "format": schema,
+        "options": {"temperature": 0},
+    }).encode("utf-8")
+    request = Request(
+        f"{host}/api/chat",
+        data=body,
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
 
-    model_name = os.getenv("GEMMA_MODEL", "gemini-2.5-flash")
+    try:
+        with urlopen(request, timeout=180) as response:
+            payload = json.loads(response.read().decode("utf-8"))
+    except HTTPError as exc:
+        raise RuntimeError(f"Ollama returned HTTP {exc.code}.") from exc
+    except URLError as exc:
+        raise RuntimeError(
+            "Could not connect to Ollama at "
+            f"{host}. Make sure the Ollama app is running."
+        ) from exc
+    except json.JSONDecodeError as exc:
+        raise RuntimeError("Ollama returned an invalid JSON response.") from exc
 
-    # Import google-genai using official client syntax
-    from google import genai
-    from google.genai import types
-
-    client = genai.Client(api_key=api_key)
-    config = types.GenerateContentConfig(temperature=0.0)
-
-    # Retry once on transient API connection error
-    last_err = None
-    for attempt in range(2):
-        try:
-            response = client.models.generate_content(
-                model=model_name,
-                contents=prompt,
-                config=config,
-            )
-            return response.text or ""
-        except Exception as err:
-            last_err = err
-            if attempt == 0:
-                time.sleep(1.0)
-                continue
-
-    raise RuntimeError(f"Language model API request failed: {type(last_err).__name__}")
+    try:
+        generated_text = payload["message"]["content"]
+    except (KeyError, TypeError) as exc:
+        raise RuntimeError("Ollama response did not contain generated text.") from exc
+    if not isinstance(generated_text, str) or not generated_text.strip():
+        raise RuntimeError("Ollama returned an empty response.")
+    return generated_text
 
 
 def parse_and_validate(text: str, answers: Dict[str, str]) -> Dict[str, Any]:
@@ -263,6 +282,7 @@ def summarise(answers: Dict[str, str]) -> Dict[str, Any]:
             raw_text = call_model(prompt)
             validated = parse_and_validate(raw_text, answers)
             validated["used_model"] = True
+            validated["model_name"] = os.getenv("OLLAMA_MODEL", "gemma4:e2b")
             validated["reason"] = None
             return validated
         except Exception as err:

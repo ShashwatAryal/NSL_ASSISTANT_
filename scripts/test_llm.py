@@ -1,16 +1,15 @@
-"""Test script for question flow and Gemma/Gemini language layer.
+"""Test script for question flow and local Gemma language layer.
 
 Tests validation rules offline on synthetic and corrupted model responses,
 and optionally runs live API calls against all clinical test cases.
 
 Run from project root:
-    python -m scripts.test_llm           # Offline checks (fast, no API key needed)
+    python -m scripts.test_llm           # Offline checks (fast, Ollama not needed)
     python -m scripts.test_llm --live    # Live model calls across 21 clinical test cases
 """
 
 import argparse
 import json
-import os
 from pathlib import Path
 from typing import Dict, List
 
@@ -23,7 +22,7 @@ DEFAULT_CASES_PATH = PROJECT_ROOT / "tests" / "llm_cases.json"
 
 def test_question_flow() -> None:
     """Verify flow sequencing and answer validation logic."""
-    assert len(QUESTIONS) == 5
+    assert len(QUESTIONS) == 4
     answers: dict[str, str] = {}
 
     # Initial question must be complaint
@@ -38,7 +37,6 @@ def test_question_flow() -> None:
     assert q2 is not None and q2["id"] == "duration_number"
 
     answers["duration_number"] = "two"
-    answers["duration_unit"] = "day"
     answers["allergy"] = "no"
     answers["medicine_taken"] = "no"
 
@@ -51,7 +49,6 @@ def test_validation_rules() -> None:
     answers = {
         "complaint": "fever",
         "duration_number": "two",
-        "duration_unit": "day",
         "allergy": "no",
         "medicine_taken": "no",
     }
@@ -138,12 +135,7 @@ def run_offline_tests(cases_path: Path) -> bool:
 
 
 def run_live_tests(cases_path: Path) -> bool:
-    """Execute live model generation and validation on each clinical case."""
-    api_key = os.getenv("GEMINI_API_KEY")
-    if not api_key:
-        print("\nERROR: GEMINI_API_KEY is not set in environment. Cannot run --live tests.")
-        return False
-
+    """Execute local Gemma generation and validation on each clinical case."""
     cases = json.loads(cases_path.read_text(encoding="utf-8"))
     print(f"\n=== RUNNING LIVE MODEL TESTS ({len(cases)} cases) ===")
 
@@ -159,10 +151,11 @@ def run_live_tests(cases_path: Path) -> bool:
         ok_allergy = (res.get("allergy") == expected["allergy"])
         ok_med = (res.get("medicine_taken") == expected["medicine_taken"])
         ok_sentence = bool(res.get("sentence_ne"))
+        used_model = bool(res.get("used_model"))
 
-        is_ok = ok_complaint and ok_duration and ok_allergy and ok_med and ok_sentence
+        is_ok = ok_complaint and ok_duration and ok_allergy and ok_med and ok_sentence and used_model
         status = "PASS" if is_ok else "FAIL"
-        used = "model" if res.get("used_model") else f"fallback ({res.get('reason')})"
+        used = res.get("model_name", "local model") if used_model else f"offline fallback ({res.get('reason')})"
         print(f"[{status}] {case['name']:<42} via {used}")
 
         if is_ok:
@@ -170,6 +163,9 @@ def run_live_tests(cases_path: Path) -> bool:
         else:
             print(f"       Expected: {expected}")
             print(f"       Got:      {res}")
+            if not used_model:
+                print("       Make sure Ollama is running and `ollama list` shows gemma4:e2b.")
+                return False
 
     pct = (100.0 * passed / len(cases)) if cases else 0.0
     print(f"\nFinal Live Score: {passed}/{len(cases)} passed ({pct:.1f}%)")
@@ -200,4 +196,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

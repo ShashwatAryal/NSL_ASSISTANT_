@@ -116,10 +116,16 @@ def main() -> None:
         if out:
             print(f"        {out['sentence_ne']}")
         if args.llm:
-            out = check("live Gemma summary", lambda: Summariser(use_llm=True).summarise(answers),
-                        "Check GEMINI_API_KEY and GEMMA_MODEL in .env.")
+            def live_summary():
+                summary = Summariser(use_llm=True).summarise(answers)
+                if not summary["used_model"]:
+                    raise RuntimeError(summary["reason"] or "Local Gemma was not used.")
+                return summary
+
+            out = check("live Gemma summary", live_summary,
+                        "Make sure Ollama is running and `ollama list` shows gemma4:e2b.")
             if out:
-                print(f"        used_model={out['used_model']} | {out['sentence_ne']} | {out['reason']}")
+                print(f"        model={out['model_name']} | {out['sentence_ne']}")
 
     if args.camera_test:
         print("\n5. Camera")

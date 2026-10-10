@@ -10,7 +10,7 @@ import threading
 import time
 import traceback
 
-from app.content import DOCTOR_REPLIES, QUESTION_EN, sign_label
+from app.content import DOCTOR_REPLIES, QUESTION_LABEL_NE, sign_label
 
 BUSY = ("countdown", "signing", "processing", "summarising")
 MIN_FRAMES = 8          # fewer recorded frames than this means the camera stalled
@@ -66,9 +66,9 @@ class Session:
     def start_attempt(self) -> None:
         with self._lock:
             if self.phase in BUSY:
-                raise RuntimeError("Please wait, still working.")
+                raise RuntimeError("कृपया पर्खनुहोस्, काम भइरहेको छ।")
             if self.phase == "summary":
-                raise RuntimeError("This visit is finished. Start a new patient.")
+                raise RuntimeError("यो भेटघाट सकियो। नयाँ बिरामी सुरु गर्नुहोस्।")
             self._attempt_id += 1
             attempt_id = self._attempt_id
             self.candidates, self.message = [], ""
@@ -98,7 +98,7 @@ class Session:
                     return
                 self.phase = "processing"
             if self.mode != "simulate" and len(records) < MIN_FRAMES:
-                raise _Retry("The camera did not deliver enough frames. Please try again.")
+                raise _Retry("क्यामेराबाट पर्याप्त दृश्य आएन। कृपया फेरि प्रयास गर्नुहोस्।")
             result = self.engine.recognise(records, fps)
             with self._lock:
                 if self._alive(aid):
@@ -112,7 +112,7 @@ class Session:
             with self._lock:
                 if self._alive(aid):
                     self.phase = "retry"
-                    self.message = f"Something went wrong ({type(exc).__name__}). Please try again."
+                    self.message = "केही समस्या भयो। कृपया फेरि प्रयास गर्नुहोस्।"
 
     def _apply_result(self, result: dict) -> None:
         """Turn the classifier output into up to three candidates for this question."""
@@ -128,16 +128,16 @@ class Session:
         }
         if result["hand_pct"] < MIN_HAND_PCT:
             self.phase = "retry"
-            self.message = "I could not see your hands. Please sit closer and sign again."
+            self.message = "हात देखिएनन्। कृपया क्यामेरानजिक बसेर फेरि सङ्केत गर्नुहोस्।"
             return
         if (result["rejected"] or result["no_sign"]) and not self.lenient:
             self.phase = "retry"
-            self.message = "I could not recognise a sign. Please sign again, clearly and a little slower."
+            self.message = "सङ्केत चिन्न सकिएन। कृपया स्पष्ट र अलि बिस्तारै फेरि सङ्केत गर्नुहोस्।"
             return
         shown = [(s, c) for s, c in ranking if s in allowed and s in self._labels][:3]
         if not shown:
             self.phase = "retry"
-            self.message = "None of the answers for this question matched. Please sign again."
+            self.message = "यस प्रश्नको उत्तरसँग सङ्केत मिलेन। कृपया फेरि सङ्केत गर्नुहोस्।"
             return
         self.candidates = [{**self._labels[s], "confidence": round(c, 3)} for s, c in shown]
         self.phase = "confirm"
@@ -146,10 +146,10 @@ class Session:
         """The patient (or operator) confirms one sign as the answer."""
         with self._lock:
             if self.phase in BUSY or self.phase == "summary":
-                raise RuntimeError("Cannot confirm right now.")
+                raise RuntimeError("अहिले पुष्टि गर्न मिल्दैन।")
             question = self._current_question()
             if question is None or not self._valid(question["id"], sign):
-                raise ValueError("That sign is not a valid answer to this question.")
+                raise ValueError("यो प्रश्नका लागि उक्त सङ्केत मान्य छैन।")
             self._attempt_id += 1
             aid = self._attempt_id
             self.answers[question["id"]] = sign
@@ -207,13 +207,12 @@ class Session:
                 qinfo = {
                     "id": question["id"],
                     "text_ne": question["text_ne"],
-                    "text_en": QUESTION_EN.get(question["id"], ""),
                     "allowed": [self._labels[s] for s in question["allowed_signs"]
                                 if s in self._labels],
                 }
             answers = [
-                {"question_id": q["id"], "question_ne": q["text_ne"],
-                 "question_en": QUESTION_EN.get(q["id"], ""),
+                {"question_id": q["id"],
+                 "question_ne": QUESTION_LABEL_NE.get(q["id"], ""),
                  **self._labels[self.answers[q["id"]]]}
                 for q in self._questions
                 if q["id"] in self.answers and self.answers[q["id"]] in self._labels
